@@ -1,0 +1,87 @@
+
+-- (1) use statement
+use it330mc_SP19_group4;
+
+-- (2) drops all tablesDROP TABLE if exists userHistory;
+DROP TABLE if exists airTimes;
+DROP TABLE if exists showByNetwork;
+DROP TABLE if exists tvShow;
+Drop table if exists category;
+DROP TABLE if exists users;
+DROP TABLE if exists network;
+
+
+-- (3) creates table that holds all catigories
+CREATE TABLE category(
+  `categoryID` int unsigned NOT NULL AUTO_INCREMENT,
+  `categoryName` varchar(45) NOT NULL,
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (categoryID)
+  )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  
+-- creates table for user data
+CREATE TABLE users (
+  `userID` int unsigned NOT NULL AUTO_INCREMENT,
+  `firstName` varchar(45) NOT NULL,
+  `lastName` varchar(45) NOT NULL,
+  `age` int NOT NULL,
+  `gender` varchar(5) NOT NULL,
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (userID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- creates table for tv show data
+CREATE TABLE tvShow(
+  `showID` int unsigned NOT NULL AUTO_INCREMENT,
+  `categoryID` int unsigned,
+  `showName` varchar(45) NOT NULL,
+  `numEpisodes` int NOT NULL,
+  `numSeasons` int NOT NULL,
+  `rating` varchar(45) NOT NULL,
+  `runTime` int NOT NULL,
+  `description` varchar(200) NOT NULL,
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (showID),
+  CONSTRAINT fk_category FOREIGN KEY (categoryID) REFERENCES category (categoryID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- creates table for networks and what type of network
+CREATE TABLE network(
+  `networkID` int unsigned NOT NULL AUTO_INCREMENT,
+  `networkName` varchar(45) NOT NULL,
+  `networkType` varchar(45) NOT NULL,
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (networkID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  
+-- creates table that links a tv show with what networks they are on
+CREATE TABLE showByNetwork(
+  `showbyNetworkID` int unsigned NOT NULL AUTO_INCREMENT,
+  `showID` int unsigned NOT NULL,
+  `networkID` int unsigned NOT NULL,
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (showByNetworkID),
+  CONSTRAINT fk_showID FOREIGN KEY (showID) REFERENCES tvShow (showID), 
+  CONSTRAINT fk_networkID FOREIGN KEY (networkID) REFERENCES network (networkID)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- creates table that holds all air times of tv shows similar to a tv guide
+CREATE TABLE airTimes(
+  `airTimeID` int unsigned NOT NULL AUTO_INCREMENT,
+  `showByNetworkID` int unsigned NOT NULL,
+  `viewDate` datetime NOT NULL,
+  `season` int NOT NULL,`episode` int NOT NULL,
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (airTimeID),
+  CONSTRAINT fk_shownet FOREIGN KEY (showByNetworkID) REFERENCES showByNetwork  (showByNetworkID) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--  creates table that keeps user history by linking them to an air time
+CREATE TABLE userHistory(
+  `userHistoryID` int unsigned NOT NULL auto_increment,
+  `userID` int unsigned NOT NULL,
+  `airTimeID` int unsigned NOT NULL,
+  `startTime` time not null,`endTime` time not null,-- `amountWatched` int NOT NULL,
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (userHistoryID),
+  CONSTRAINT fk_userID foreign key (userID) references users (userID), 
+  CONSTRAINT fk_airTimeID foreign key (airTimeID) references airTimes (airTimeID) 
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
