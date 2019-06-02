@@ -1,0 +1,101 @@
+-- (1.1) use statment
+use it330mc_SP19_group4;
+
+
+-- (1.2) deletes all data from table in correct order
+delete from  userHistory;
+delete from airTimes;
+delete from showByNetwork;
+delete from users;
+delete from tvShow;
+delete from network;
+delete from category;
+
+-- (2.1) inserts user data to user table
+INSERT INTO users (firstName, lastName, age, gender)
+VALUES ('John', 'Raefski', '25', 'M'),   ('Maryluz', 'M', '21','F'),   ('Bradley' ,'S', '20',  'M');
+
+-- (2.1) inserts catigories to table
+insert into category (categoryName)
+values ('Fantasy'),   ('Drama'),   ('Historical'),   ('Comedy'),   ('Animation');
+
+-- (2.1) adds network and network type to network table
+INSERT INTO network (networkName, networkType)
+VALUES ('HBO',   'Streaming'),
+        ('Netflix', 'Streaming'),
+        ('History', 'Cable'), 
+        ('Comedy Central', 'Cable'),
+        ('Hulu', 'Streaming');
+        
+-- (2.1) adds 8 shows to the tv show table
+INSERT INTO tvShow (showName, categoryID, numEpisodes, numSeasons, rating, runTime, `description`)
+VALUES ('Game of Thrones', (select categoryID From category where categoryName = 'Fantasy'), '73', '8', 'MA', '60', 'Nine noble families fight for control over the mythical lands of Westeros, while an ancient enemy returns after being dormant for thousands of years.'),
+        ('Bojack Horseman',(select categoryID From category where categoryName = 'Drama'),'62','6','MA', '30', '/'),
+        ('Vikings', (select categoryID From category where categoryName = 'Historical'), '89', '6', 'MA', '60', '/'), 
+        ('Archer', (select categoryID From category where categoryName = 'Comedy'), '110', '10', 'MA', '30','/'),
+        ('Arrested Development', (select categoryID From category where categoryName = 'Comedy'), '84', '5', 'TV14', '30','/'),
+        ('It's Always Sunny in Philadelphia', (select categoryID From category where categoryName = 'Comedy'), '144', '13', 'MA', '30','/'), 
+        ('Attack on Titan',(select categoryID From category where categoryName = 'Animation'), '49', '3', 'TV14', '30','/'), 
+        ('The Office', (select categoryID From category where categoryName = 'Comedy'), '201', '9', 'TV-PG', '30','/');
+        
+-- (2.1) connects each tv show to the network it appears on
+INSERT INTO showByNetwork (showID, networkId)
+VALUES ((SELECT showID FROM tvShow WHERE showName = 'Vikings'), (SELECT networkID FROM network WHERE networkName = 'History')), 
+        ((select showID From tvShow where showName = 'Game of Thrones'), (select networkID from network where networkName = 'HBO')), 
+        ((select showID From tvShow where showName = 'Bojack Horseman'), (select networkID from network where networkName = 'Netflix')), 
+        ((select showID From tvShow where showName = 'Archer'), (select networkID from network where networkName = 'Comedy Central')), 
+        ((select showID From tvShow where showName = 'Arrested Development'), (select networkID from network where networkName = 'Netflix')), 
+        ((select showID From tvShow where showName = 'It's Always Sunny in Philadelphia'), (select networkID from network where networkName = 'Hulu')),  
+        ((select showID From tvShow where showName = 'Attack on Titan'), (select networkID from network where networkName = 'Hulu')), 
+        ((select showID From tvShow where showName = 'The Office'), (select networkID from network where networkName = 'Netflix'));
+        
+-- (2.1) inserts date season and episode for tv shows into air times table (think of this table like a tv guide) 
+INSERT INTO airTimes (showByNetworkID, viewDate, season, episode)
+VALUES ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Game of Thrones')),'2019-3-27 20:00', '7', '64'), 
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Game of Thrones')),'2019-3-27 21:00', '7', '65'),
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Game of Thrones')),'2019-3-27 22:00', '7', '66'),   
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Bojack Horseman')),'2019-3-30 23:00', '6', '60'), 
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Vikings')),'2019-4-1 21:00', '6', '87'),  
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Arrested Development')),'2019-4-5 22:00', '2', '25'), 
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'It's Always Sunny in Philadelphia')),'2019-4-6 19:00', '12', '127'),
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'It's Always Sunny in Philadelphia')),'2019-4-6 20:00', '12', '131'), 
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Arrested Development')),'2019-4-6 21:00', '2', '26'),
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Attack on Titan')),'2019-4-8 22:00', '3', '49'), 
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Game of Thrones')),'2019-4-5 20:00', '1', '1'), 
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Bojack Horseman')),'2019-4-7 20:00', '7', '64'),
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Game of Thrones')),'2019-4-8 21:00', '6', '64'),
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Arrested Development')),'2019-4-8 18:00', '7', '73'),  
+        ((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Arrested Development')),'2019-4-11 20:00', '5', '25');
+
+-- (2.1) inserts which airtime a user has watched into userHistory table (not sure why startTime changed too "--")
+INSERT INTO userHistory (userID, airTimeID, startTime, EndTime)
+values ((select userID from users where lastName = 'Raefski'), 
+              (select airTimeID from airTimes where viewDate = '2019-3-27 20:00'and episode = '64'),'20:00:00', '21:00:00'), -- , '60'), 
+        ((select userID from users where lastName = 'Raefski'),
+              (select airTimeID from airTimes where viewDate = '2019-3-27 21:00'and episode = '65'),'21:00:00', '22:00:00'), -- , '60'), 
+        ((select userID from users where lastName = 'Raefski'),
+              (select airTimeID from airTimes where viewDate = '2019-3-27 22:00'and episode = '66'),'22:00', '23:00'), -- ,'60'), 
+        ((select userID from users where lastName = 'Raefski'),
+              (select airTimeID from airTimes where viewDate = '2019-3-30 23:00'and episode = '60'),'23:00', '23:30'), -- ,'30'), 
+        ((select userID from users where lastName = 'Raefski'),
+              (select airTimeID from airTimes where viewDate = '2019-4-1 21:00' and episode = '87'),'21:00', '21:30'), -- ,'30'),
+        ((select userID from users where lastName = 'Michel'),
+              (select airTimeID from airTimes where viewDate = '2019-4-5 22:00'and episode = '25'),'22:00:', '22:30'), -- , '30'),
+        ((select userID from users where lastName = 'Michel'),
+              (select airTimeID from airTimes where viewDate = '2019-4-6 19:00'and episode = '127'),'19:00:', '19:30'), -- , '30'),
+        ((select userID from users where lastName = 'Michel'),
+              (select airTimeID from airTimes where viewDate = '2019-4-6 20:00'and episode = '131'),'20:00:', '20:30'), -- , '30'),
+        ((select userID from users where lastName = 'Michel'),
+              (select airTimeID from airTimes where viewDate = '2019-4-6 21:00'and episode = '26'),'21:00:', '21:30'), -- , '30'),
+        ((select userID from users where lastName = 'Michel'),
+              (select airTimeID from airTimes where viewDate = '2019-4-8 22:00'and episode = '49'),'22:00:', '22:30'), -- ,'30'), 
+        ((select userID from users where lastName = 'Sheridan'),
+              (select airTimeID from airTimes where viewDate = '2019-4-5 20:00'and episode = '1'),'20:00:', '21:00'), -- , '60'), 
+        ((select userID from users where lastName = 'Sheridan'),
+              (select airTimeID from airTimes where viewDate = '2019-4-7 20:00'and episode = '64'),'20:00:', '20:30'), -- ,'30'), 
+        ((select userID from users where lastName = 'Sheridan'),
+              (select airTimeID from airTimes where viewDate = '2019-4-8 21:00'and episode = '64'),'21:00:', '22:00'), -- ,'60'),
+        ((select userID from users where lastName = 'Sheridan'),
+              (select airTimeID from airTimes where viewDate = '2019-4-8 18:00'and episode = '73'),'18:00:', '18:30'), -- ,'30'), 
+        ((select userID from users where lastName = 'Sheridan'),
+              (select airTimeID from airTimes where viewDate = '2019-4-11 20:00'and episode = '25'),'20:00:', '20:30'); -- ,'30');
