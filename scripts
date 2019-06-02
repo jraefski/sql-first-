@@ -1,0 +1,408 @@
+use it330mc_SP19_group4;
+
+-- (1) adds category to category table
+/*
+insert into category (categoryName)
+select
+    'Science Fiction'
+from 
+    DUAL WHERE NOT EXISTS
+      (SELECT categoryName FROM category WHERE categoryName ='Science Fiction');
+      
+ select * from category where categoryName = 'Science Fiction';
+ */
+ 
+ -- (2) Delete category
+ /*
+ -- example data
+ insert into category (categoryName)
+ values ('Action');
+ 
+ -- shows category list
+ select
+    categoryName
+ from
+    category
+ where
+    categoryName = 'Action';
+    
+-- deletes action category
+DELETE FROM
+    category
+WHERE
+    categoryName = 'Action';
+    
+-- shows catergory list after action is deleted
+select
+    categoryName
+from
+    category
+where
+    categoryName = 'Action';
+*/
+
+-- (2.1) Alternate delete category, if it is being referenced
+/*
+-- changes rows in child table to a different category
+update
+    tvShow
+set
+    categoryID = (select categoryID from category where categoryName = 'Drama')
+where
+    categoryID = (select categoryID from category where categoryName = 'Fantasy');
+
+-- deletes category
+DELETE FROM
+    category
+WHERE
+    categoryName = 'Fantasy';
+    
+-- displays category listselect * from category;
+*/
+
+-- (3) add tv show
+/*
+-- adds catergory if it doesnt exist
+insert into 
+    category (categoryName)
+select
+    'Horror'
+from
+    dual
+WHERE NOT EXISTS
+  (SELECT categoryName FROM category WHERE categoryName ='Horror');
+ 
+-- adds tv show
+ INSERT INTO tvShow (showName, categoryID, numEpisodes, numSeasons, rating, runTime, `description`)
+        select'Ash Vs The Evil Dead',
+        (select categoryID From category where categoryName = 'Horror'),'20', '5', 'MA', '30','/'
+ from
+    dual
+WHERE NOT EXISTS
+    (SELECT showName FROM tvShow WHERE showName ='Ash Vs The Evil Dead');
+    
+-- displays tv show
+select * from tvShow where showName = 'Ash Vs The Evil Dead';
+*/
+
+-- (4) Delete's tv show
+/*
+-- example data
+-- example tv show
+INSERT INTO tvShow (showName, categoryID, numEpisodes, numSeasons, rating, runTime, `description`)
+VALUES('Black Mirror',(select categoryID From category where categoryName = 'Drama'),'25', '5', 'MA', '60', '/');
+
+-- example network if doesnt already exist
+INSERT INTO network (networkName, networkType)
+  select'Netflix','Streaming'
+from
+  dual
+WHERE NOT EXISTS
+  (select networkName from network where networkName = 'Netflix');
+  
+-- connects example show to network
+INSERT INTO showByNetwork (showID, networkId)
+VALUES((SELECT showID FROM tvShow WHERE showName = 'Black Mirror'),(SELECT networkID FROM network WHERE networkName = 'Netflix'));
+
+-- example airtime
+INSERT INTO airTimes (showByNetworkID, viewDate, season, episode)
+VALUES((select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Black Mirror')),'2019-4-20 20:00','4', '11');
+
+-- displays table aftr adding example data
+select * from tvShow order by showName;
+
+-- deletes show
+-- deletes show airtime first
+delete from
+  airTimes
+where
+  showByNetworkId = (select showByNetworkID from showByNetwork where showID = 
+  (select showID From tvShow where showName = 'Black Mirror'));
+
+-- deletes network second
+delete from
+  showByNetwork
+whereshowID = (select showID From tvShow where showName = 'Black Mirror');
+
+-- deletes show last
+DELETE FROM
+  tvShow
+WHERE
+  showName = 'Black Mirror';
+  
+-- displays table after delete
+select * from tvShow order by showName;
+*/
+
+-- (5) searchable tv show
+/*
+SELECT
+  tvShow.showID,
+  tvShow.showName as 'Show Name',
+  tvShow.numSeasons as 'Number of Seasons',
+  tvShow.numEpisodes as 'Number of Episodes' ,
+  tvShow.rating as 'Rating',
+  tvShow.runTime as 'Run Time (In minutes)',
+  category.categoryName as 'Genre',
+  tvShow.description as 'Description',
+  network.networkName as 'Network',
+  network.networkType as 'Service Type'
+FROM
+  tvShow
+JOIN 
+  category ON tvShow.categoryID = category.categoryID
+join
+ showByNetwork on tvShow.showID = showByNetwork.showID
+join
+  network on showByNetwork.networkID = network.networkID
+ORDER BY showName ASC;
+*/
+
+-- (6) add tv show viewing
+/*
+-- example data
+-- inserts example category if it doesnt exist
+insert into 
+  category(categoryName)
+select
+  'Horror'
+from
+  dual
+WHERE NOT EXISTS
+  (SELECT categoryName FROM category WHERE categoryName ='Horror');
+  
+-- inserts example tv show if it doesnt exist
+INSERT INTO tvShow (showName, categoryID, numEpisodes, numSeasons, rating, runTime, `description`)
+  select'Ash Vs The Evil Dead',
+  (select categoryID From category where categoryName = 'Horror'),'20', '5', 'MA', '30','/'
+from
+  dual
+WHERE NOT EXISTS
+  (SELECT showName FROM tvShow WHERE showName ='Ash Vs The Evil Dead');
+  
+-- example network if doesnt already exist
+INSERT INTO network (networkName, networkType)
+  select'Netflix','Streaming'
+from
+  dual
+WHERE NOT EXISTS
+  (select networkName from network where networkName = 'Netflix');
+
+-- connects example tv show to network
+INSERT INTO showByNetwork (showID, networkId)
+select(SELECT showID FROM tvShow WHERE showName = 'Ash Vs The Evil Dead'),
+      (SELECT networkID FROM network WHERE networkName = 'Netflix')
+from
+  dual
+WHERE NOT EXISTS
+  (SELECT showByNetworkID FROM showByNetwork WHERE showID = (select showID from tvShow where showName = 'Ash Vs The Evil Dead')) ;
+
+-- adds airtime
+insert into airTimes (showByNetworkID, viewDate, season, episode)
+select(select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Ash Vs The Evil Dead')),
+      '2019-4-30 12:00','4','11'
+from
+  dual
+where not exists
+  (select viewDate from airTimes where viewDate = '2019-4-30 12:00' and
+  showByNetworkID = (select showByNetworkID from showByNetwork where showID =
+  (select showID from tvShow where showName = 'Ash Vs The Evil Dead')) );
+
+-- adds viewing of show
+INSERT INTO userHistory (userID, airTimeID, startTime, EndTime)
+select(select userID from users where lastName = 'Raefski'),
+       (select airTimeID from airTimes where viewDate = '2019-4-30 12:00'and episode = '11'),'23:00', '24:00'
+from
+  dual
+where not exists
+  (select airTimeID from userHistory where airTimeID = (select airTimeID from airTimes where viewDate = '2019-4-30 12:00'));
+ 
+-- display viewing
+select
+  users.firstName,
+  users.LastName,
+  userHistory.startTime,
+  airTimes.viewDate,
+  airTimes.season,
+  airTimes.episode
+from
+  users
+join 
+  userHistory on users.userID = userHistory.userID
+join 
+  airTimes on userHistory.airTimeID = airTimes.airTimeID
+where 
+  viewdate = '2019-4-30 12:00';
+*/
+
+-- (7) Delete tv show viewing
+/*
+-- Example data
+-- inserts example category if it doesnt exist
+insert into category (categoryName)
+select
+  'Horror'
+from
+  dual
+WHERE NOT EXISTS
+  (SELECT categoryName FROM category WHERE categoryName ='Horror');
+  
+-- inserts example tv show if it doesnt exist
+INSERT INTO tvShow (showName, categoryID, numEpisodes, numSeasons, rating, runTime, `description`)
+select
+  'Ash Vs The Evil Dead', 
+  (select categoryID From category where categoryName = 'Horror'),'20', '5', 'MA', '30','/'
+from
+  dual
+WHERE NOT EXISTS
+  (SELECT showName FROM tvShow WHERE showName ='Ash Vs The Evil Dead');
+  
+-- example network
+INSERT INTO network (networkName, networkType)
+select
+  'Netflix','Streaming'
+from
+  dual
+WHERE NOT EXISTS
+  (select networkName from network where networkName = 'Netflix');
+  
+-- connects example tv show to network
+INSERT INTO showByNetwork (showID, networkId)
+select
+  (SELECT showID FROM tvShow WHERE showName = 'Ash Vs The Evil Dead'),
+  (SELECT networkID FROM network WHERE networkName = 'Netflix')
+from
+  dual
+WHERE NOT EXISTS
+  (SELECT showByNetworkID FROM showByNetwork WHERE showID = (select showID from tvShow where showName = 'Ash Vs The Evil Dead'));
+  
+-- adds airtime
+insert into airTimes (showByNetworkID, viewDate, season, episode)
+select 
+  (select showByNetworkID from showByNetwork where showID = (select showID From tvShow where showName = 'Ash Vs The Evil Dead')),
+  '2019-4-30 12:00', '4', '11'
+from 
+  dual
+where not exists
+  (select viewDate from airTimes where viewDate = '2019-4-30 12:00' and 
+  showByNetworkID =(select showByNetworkID from showByNetwork where showID = 
+  (select showID from tvShow where showName = 'Ash Vs The Evil Dead')) );
+  
+-- adds example viewing of show
+INSERT INTO userHistory (userID, airTimeID, startTime, EndTime)
+select
+  (select userID from users where lastName = 'Raefski'),
+  (select airTimeID from airTimes where viewDate = '2019-4-30 12:00'and episode = '11'),'23:00', '24:00' 
+from 
+  dual
+where not exists
+  (select airTimeID from userHistory where airTimeID = (select airTimeID from airTimes where viewDate = '2019-4-30 12:00'));
+
+-- displays viewing before delete
+select
+  users.firstName,
+  users.LastName,
+  userHistory.startTime,
+  airTimes.viewDate,
+  airTimes.season,
+  airTimes.episode
+from
+  users
+join
+  userHistory on users.userID = userHistory.userID
+join
+  airTimes on userHistory.airTimeID = airTimes.airTimeIDwhere viewdate = '2019-4-30 12:00';
+  
+-- Delete Viewing
+DELETE FROM
+  userHistory
+WHERE
+  airTimeID = (select airTimeID from airTimes where viewDate = '2019-4-30 12:00'and episode = '11')and
+  userID = (select userID from users where lastName = 'Raefski') ;
+  
+-- displays that viewing was deleted
+select
+  users.firstName,
+  users.LastName,
+  userHistory.startTime,
+  airTimes.viewDate,
+  airTimes.season,
+  airTimes.episodefromusers
+join 
+  userHistory on users.userID = userHistory.userID
+join 
+  airTimes on userHistory.airTimeID = airTimes.airTimeID
+where 
+  viewdate = '2019-4-30 12:00';
+*/
+
+-- (8) displays all viewing between times
+/*
+-- (7.1) Show all viewing characteristics in output.
+Select
+  users.userID,
+  users.firstName as 'First Name', 
+  users.lastName as 'Last Name',
+  tvShow.showName as 'Show',
+  network.networkName as 'Network',
+  category.categoryName as 'Category',
+  airTimes.season as 'Season',
+  airTimes.episode as 'Episode',
+  tvShow.runTime as 'Run Time',
+  airTimes.viewDate 'Air Date and Time',
+  cast(userHistory.endTime - userHistory.startTime as time) as 'Amount Watched',
+  ((userHistory.endTime - userHistory.startTime) / (select sum(userHistory.endTime - userHistory.startTime) from userHistory)) * 100 as 'Percent of Total Total Time Watched Between All Users'
+FROM
+  users
+join
+  userHistory on users.userID = userHistory.userID
+join
+  airTimes on userHistory.airTimeID = airTimes.airTimeID
+join
+  showByNetwork on airTimes.showByNetworkID = showByNetwork.showbyNetworkID
+join
+  tvShow on showByNetwork.showID  = tvShow.showID
+join
+  network on showByNetwork.networkID = network.networkID
+JOIN
+  category ON tvShow.categoryID = category.categoryID
+where
+  users.lastName = 'Raefski'and airTimes.viewDate >= '2019-3-27 20:00'and
+  airTimes.viewDate <= '2019-3-27 23:00'
+ORDER BY
+  viewDate;
+*/
+
+-- (9)CATEGORY REPORT
+/*
+SELECT
+  category.categoryName as 'Category',
+  count(tvShow.categoryID)  as 'Number of shows aired',
+  sum(tvShow.runTime)  as 'Sum of aired shows run times',
+  (sum(endTime - startTime) / (select sum(endTime - startTime) from userHistory)) * 100 as 'Percent of total time watched'
+FROM
+  category
+join
+  tvShow on category.categoryID = tvShow.categoryID
+join
+  showByNetwork on showByNetwork.showID = tvShow.showID
+join
+  airTimes on airTimes.showByNetworkID = showByNetwork.showbyNetworkID
+join
+  userHistory on airTimes.airTimeID = userHistory.airTimeID
+group by
+  category.categoryName
+order by
+  sum(endTime - startTime) / (select sum(endTime - startTime) from userHistory) desc;
+*/
+
+-- displays all tables for testing
+/*
+select * from users;
+select * from tvShow;
+select * from network;
+select * from showByNetwork;
+select * from airTimes;
+select * from userHistory;
+select * from category;
+*/
